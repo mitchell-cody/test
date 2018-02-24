@@ -80,21 +80,7 @@ namespace serial {
       int p_bin = px*grid_len + py;
       grid[p_bin].push_back(particles[i]);
     }
-
-    std::vector<particle_t> get_neighbors(int p_bin)
-     {
-         std::vector<particle_t> neighbors;
-         for(int i = -1; i < 2; i++) {
-             for (int k = -1; k < 2; k++){
-              int bin = p_bin + (i * grid_len + k);
-              for(int j = 0; j < grid[bin].size(); j++) {
-                  neighbors.push_back(grid[bin][j]);
-              }
-              }
-          }
-         return neighbors;
-     }
-
+        
     // Disable checks and outputs?
     bool disable_checks = cli_parameters["disable_checks"];
 
@@ -121,7 +107,15 @@ namespace serial {
       for (int i = 0; i < grid_len; i++) {
         for (int j = 0; j < grid_len; j++) {
           int part_bin = i*grid_len+j;
-          std::vector<particle_t> neighbors = get_neighbors(part_bin);
+            std::vector<particle_t> neighbors;
+            for(int i = -1; i < 2; i++) {
+                for (int k = -1; k < 2; k++){
+                    int bin = part_bin + (i * grid_len + k);
+                    for(int j = 0; j < grid[bin].size(); j++) {
+                        neighbors.push_back(grid[bin][j]);
+                    }
+                }
+            }
           for (int parts_in_bin = 0; parts_in_bin < grid[part_bin].size(); parts_in_bin++) {
             grid[part_bin][parts_in_bin].ax = 0;
             grid[part_bin][parts_in_bin].ay = 0;
