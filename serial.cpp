@@ -69,7 +69,7 @@ namespace serial {
      */
     int rad_int = (2 * cutoff);
     int grid_len = ceil(size/ rad_int);
-    int grid.resize(grid_len*grid_len);
+    grid.resize(grid_len*grid_len);
 
     for (int i = 0; i < n; i++)
     {
@@ -79,9 +79,9 @@ namespace serial {
       grid[p_bin].push_back(particles[i]);
     }
 
-    vector<particle_t> get_neighbors(int idx)
+    std::vector<particle_t> get_neighbors(int idx)
      {
-         vector<particle_t> neighbors;
+         std::vector<particle_t> neighbors;
          for(int i = 0; i < 9; i++) {
               int bin = idx + offset[i];
               for(int j = 0; j < grid[bin].size(); j++) {
