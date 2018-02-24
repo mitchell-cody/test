@@ -28,9 +28,15 @@ namespace serial {
     double dmin;
     double absmin = 1.0;
     double absavg = 0.0;
+    const double density = 0.0005;
+    const double mass = 0.01;
+    const double cutoff = 0.01;
+    const double min_r = (cutoff / 100);
+    const double dt = 0.0005;
 
     // Check number of particles for simulation
     int n = cli_parameters["number_particles"];
+    double size = sqrt(density * n);
 
     // Check if output files should be saved.
     std::string save_filename = cli_parameters["output_filename"];
