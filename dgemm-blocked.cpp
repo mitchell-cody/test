@@ -69,18 +69,18 @@ namespace serial {
          * turn grid into 1 d array
          * determine what bin particles are in
          */
-    int rad_int = (2 * cutoff);
-    int grid_len = ceil(size/ rad_int);
+    double rad_int = (2 * cutoff);
+    double grid_len = ceil(size/ rad_int);
     grid.resize(grid_len*grid_len);
 
     for (int i = 0; i < n; i++)
     {
-      int px = particles[i].ax / rad_int;
-      int py = particles[i].ay / rad_int;
-      int p_bin = px*grid_len + py;
+      double px = particles[i].ax / rad_int;
+      double py = particles[i].ay / rad_int;
+      double p_bin = px*grid_len + py;
       grid[p_bin].push_back(particles[i]);
     }
-        
+
     // Disable checks and outputs?
     bool disable_checks = cli_parameters["disable_checks"];
 
@@ -106,11 +106,11 @@ namespace serial {
        */
       for (int i = 0; i < grid_len; i++) {
         for (int j = 0; j < grid_len; j++) {
-          int part_bin = i*grid_len+j;
+          double part_bin = i*grid_len+j;
             std::vector<particle_t> neighbors;
             for(int i = -1; i < 2; i++) {
                 for (int k = -1; k < 2; k++){
-                    int bin = part_bin + (i * grid_len + k);
+                    double bin = part_bin + (i * grid_len + k);
                     for(int j = 0; j < grid[bin].size(); j++) {
                         neighbors.push_back(grid[bin][j]);
                     }
@@ -136,8 +136,9 @@ namespace serial {
       }
 
       //near to clear and rebind
-      for (int i = 0, i < grid_len*grid_len; i++){
-        grid[i].clear()
+      for (int i = 0; i < grid_len*grid_len; i++)
+      {
+        grid[i].clear();
       }
       for (int i = 0; i < n; i++)
       {
