@@ -65,15 +65,8 @@ namespace openmp {
 
         // create spatial bins (of size cutoff by cutoff)
         double size = sqrt(density * n);
-        //auto bpr = static_cast<int>(ceil(size / cutoff));
-        //int numbins = bpr * bpr;
-        //std::vector<std::vector<particle_t>> bins(
-        //        static_cast<unsigned long>(numbins));
 
-        /*
-        Set size of grid
-        determine what bins particles fall into
-        */
+        // Set size of grid determine what bins particles fall into
         double rad_int = (2*cutoff);
         double grid_len = ceil(size/rad_int);
         std::multimap<int,int> grid_b;
@@ -107,19 +100,8 @@ namespace openmp {
                     grid_p[i] = grid_bin;
                 }
 
-                // clear bins at each time step
-                //#pragma omp for
-                //for (int m = 0; m < numbins; m++) {
-                //    bins[m].clear();
-                //}
+                #pragma omp barrier
 
-                //#pragma omp for
-                //for (int i = 0; i < n; i++) {
-                //   int tmp_bin_number = bin_number(particles[i], bpr, cutoff);
-                //   #pragma omp critical
-                //   bins[tmp_bin_number].push_back(particles[i]);
-                //}
-                //#pragma omp barrier
                 //
                 // Compute forces
                 //
@@ -141,6 +123,8 @@ namespace openmp {
                         }
                     }
                 }
+                
+                #pragma omp barrier 
 
                 //
                 // Move particles
