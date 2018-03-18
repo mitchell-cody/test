@@ -26,6 +26,9 @@ namespace openmp {
          int bin_number = bin_row_index + bpr * bin_column_index;
          return bin_number;
      }
+     
+     typdef std::vector<particle_t> bin_t; 
+
 //
 // OpenMP implementation of simulation
 //
@@ -65,7 +68,6 @@ namespace openmp {
 
         // Initialize particles for simulation
         std::vector<particle_t> particles(static_cast<unsigned long>(n));
-        vector<bins> bins_parti;
         set_size(n);
         init_particles(n, particles);
 
@@ -75,7 +77,8 @@ namespace openmp {
         auto bpr = static_cast<int>(ceil(size / cutoff));
         int numbins = bpr * bpr;
         std::vector<std::vector<particle_t>> bins(static_cast<unsigned long>(numbins));
-
+        vector<bin_t> bins_parti;
+         
         // Disable checks and outputs?
         bool disable_checks = cli_parameters["disable_checks"];
 
@@ -112,24 +115,22 @@ namespace openmp {
                 // loop particles
                 for (int i = 0; i < numbins; i ++){
                     for (int j = 0; j <numbins; j++){
-                        bins& parti_bin = bins_parti[i*numbins+j];
-                        for (bi = 0; bi < parti_bin.size(); bi++)
+                        bin_t& parti_bin = bins_parti[i*numbins+j];
+                        for (int bi = 0; bi < parti_bin.size(); bi++)
                             particles[bi].ax = 0.0;
                             particles[bi].ay = 0.0;
                     for (int adj_i = -1; adj_i < 2; adj_i++) {
-                        for (int adj_k = -1; adj_k < 2; adj_k++) {
+                        for (int adj_j = -1; adj_j < 2; adj_j++) {
                             // look at the particles in adjacent bins
-                            bins& ret = bins_parti[(i+adj_i) * numbins + j + adj_j];
+                            bin_t& ret = bins_parti[(i+adj_i) * numbins + j + adj_j];
                             for (int k = 0; k < parti_bin.size(); k++)
-                                for (int bj = 0; bj < bins_parti(); bj++)
-                                    apply_force(parti_bin[k], bins_parti[bj], dmin, davg, navg);
+                                for (int bj = 0; bj < ret.size(); bj++)
+                                    apply_force(parti_bin[k], ret[bj], dmin, davg, navg);
                             }
                         }
                     }
                 }
                 
-                #pragma omp barrier 
-
                 //
                 // Move particles
                 //
@@ -137,9 +138,6 @@ namespace openmp {
                 for (int i = 0; i < n; i++) {
                     move(particles[i]);
                 }
-
-                grid_b.clear();
-                grid_p.clear();
 
                 if (!disable_checks) {
                     //
