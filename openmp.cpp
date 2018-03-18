@@ -89,7 +89,7 @@ namespace openmp {
         //
         auto timer = read_timer();
 
-#pragma omp parallel private(dmin)
+        #pragma omp parallel private(dmin)
         {
             int numthreads = omp_get_num_threads();
             for (int step = 0; step < NSTEPS; step++) {
@@ -98,12 +98,12 @@ namespace openmp {
                 dmin = 1.0;
 
                 // place particles in bins
-#pragma omp for
+                #pragma omp for
                 for (int i = 0; i < n; i++) {
                     int px = particles[i].x / rad_int;
                     int py = particles[i].y / rad_int;
                     int grid_bin = px*grid_len + py;
-                    grid_b.insert( std::pair<int,int>grid_bin,i));
+                    grid_b.insert( std::pair<int,int>(grid_bin,i));
                     grid_p[i] = grid_bin;
                 }
 
@@ -123,11 +123,11 @@ namespace openmp {
                 //
                 // Compute forces
                 //
-#pragma omp for reduction(+ : navg) reduction(+ : davg)
+                #pragma omp for reduction(+ : navg) reduction(+ : davg)
                 // loop particles
                 for (int i = 0; i < n; i++) {
-                    particles[p].ax = 0.0;
-                    particles[p].ay = 0.0;
+                    particles[i].ax = 0.0;
+                    particles[i].ay = 0.0;
                     int parti_bin = grid_p[i];
                     // find adjacent blocks;
                     for (int adj_i = -1; adj_i < 2; adj_i++) {
@@ -145,7 +145,7 @@ namespace openmp {
                 //
                 // Move particles
                 //
-#pragma omp for
+                #pragma omp for
                 for (int i = 0; i < n; i++) {
                     move(particles[i]);
                 }
@@ -153,26 +153,16 @@ namespace openmp {
                 grid_b.clear();
                 grid_p.clear();
 
-#pragma omp for
-                for (int i = 0, i < n, i++)
-                {
-                    int px = particles[i].x / rad_int;
-                    int py = particles[i].y / rad_int;
-                    int grid_bin = px*grid_len + py;
-                    grid_b.insert( std::pair<int,int>(grid_bin,i) );
-                    grid_p[i] = grid_bin;
-                }
-
                 if (!disable_checks) {
                     //
                     // Computing statistical data
                     //
-#pragma omp master
+                    #pragma omp master
                     if (navg) {
                         absavg += davg / navg;
                         nabsavg++;
                     }
-#pragma omp critical
+                    #pragma omp critical
                     if (dmin < absmin) {
                         absmin = dmin;
                     }
@@ -180,7 +170,7 @@ namespace openmp {
                     //
                     // Save if necessary
                     //
-#pragma omp master
+                    #pragma omp master
                     if (fsave && (step % SAVEFREQ) == 0) {
                         save(fsave, n, particles);
                     }
