@@ -20,6 +20,12 @@
 
 namespace openmp {
 
+     int bin_number(const particle_t &p, const int &bpr, const double &cutoff) {
+         auto bin_row_index = static_cast<int>(floor(p.x / cutoff));
+         auto bin_column_index = static_cast<int>(floor(p.y / cutoff));
+         int bin_number = bin_row_index + bpr * bin_column_index;
+         return bin_number;
+     }
 //
 // OpenMP implementation of simulation
 //
@@ -59,20 +65,16 @@ namespace openmp {
 
         // Initialize particles for simulation
         std::vector<particle_t> particles(static_cast<unsigned long>(n));
+        vector<bins> bins_parti;
         set_size(n);
         init_particles(n, particles);
 
 
         // create spatial bins (of size cutoff by cutoff)
         double size = sqrt(density * n);
-
-        // Set size of grid determine what bins particles fall into
-        double rad_int = (2*cutoff);
-        double grid_len = ceil(size/rad_int);
-        std::multimap<int,int> grid_b;
-        std::multimap<int,int>::iterator it;
-        std::map<int,int> grid_p;
-        std::pair <std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;
+        auto bpr = static_cast<int>(ceil(size / cutoff));
+        int numbins = bpr * bpr;
+        std::vector<std::vector<particle_t>> bins(static_cast<unsigned long>(numbins));
 
         // Disable checks and outputs?
         bool disable_checks = cli_parameters["disable_checks"];
@@ -89,36 +91,38 @@ namespace openmp {
                 navg = 0;
                 davg = 0.0;
                 dmin = 1.0;
-
-                // place particles in bins
-                #pragma omp for
-                for (int i = 0; i < n; i++) {
-                    int px = particles[i].x / rad_int;
-                    int py = particles[i].y / rad_int;
-                    int grid_bin = px*grid_len + py;
-                    grid_b.insert( std::pair<int,int>(grid_bin,i));
-                    grid_p[i] = grid_bin;
+                
+                //clear bins at each time step
+                //#pragma omp for
+                for (int m =0; m <numbins; m++){
+                    bins[m].clear();
                 }
-
-                #pragma omp barrier
-
+                
+                //#pragma omp for
+                for (int i =0;i<n;i++){
+                    int tmp = bin_number(particles[i], bpr, cutoff);
+                    bins[tmp].push_back(particles[i]);
+                }   
+                
                 //
                 // Compute forces
                 //
+                
                 #pragma omp for reduction(+ : navg) reduction(+ : davg)
                 // loop particles
-                for (int i = 0; i < n; i++) {
-                    particles[i].ax = 0.0;
-                    particles[i].ay = 0.0;
-                    int parti_bin = grid_p[i];
-                    // find adjacent blocks;
+                for (int i = 0; i < numbins; i ++){
+                    for (int j = 0; j <numbins; j++){
+                        bins& parti_bin = bins_parti[i*numbins+j];
+                        for (bi = 0; bi < parti_bin.size(); bi++)
+                            particles[bi].ax = 0.0;
+                            particles[bi].ay = 0.0;
                     for (int adj_i = -1; adj_i < 2; adj_i++) {
                         for (int adj_k = -1; adj_k < 2; adj_k++) {
                             // look at the particles in adjacent bins
-                            int bin = parti_bin + (adj_i * grid_len + adj_k);
-                            ret = grid_b.equal_range(bin);
-                            for (std::multimap<int,int>::iterator it=ret.first; it!=ret.second; ++it){
-                                apply_force(particles[i], particles[(*it).second], dmin, davg, navg);
+                            bins& ret = bins_parti[(i+adj_i) * numbins + j + adj_j];
+                            for (int k = 0; k < parti_bin.size(); k++)
+                                for (int bj = 0; bj < bins_parti(); bj++)
+                                    apply_force(parti_bin[k], bins_parti[bj], dmin, davg, navg);
                             }
                         }
                     }
